@@ -1,2 +1,4 @@
-github.com/kr/binarydist v0.1.0 h1:6kAoLA9FMMnNGSehX0s1PdjbEaACznAv/W219j2uvyo=
-github.com/kr/binarydist v0.1.0/go.mod h1:DY7S//GCoz1BCd0B0EVrinCKAZN3pXe+MDaIZbXQVgM=
+github.com/wuc656/binarydist v0.1.1 h1:WJZGTmLeMPXPmRdbsq+C6miD3+vY1zK5vbeinQdGB2I=
+github.com/wuc656/binarydist v0.1.1/go.mod h1:Eo2odGQAeqvsDiK1CntOEKQRty5ce1/gzRl4LDM9tUM=
+github.com/wuc656/compress v0.0.5 h1:3PRWcYSv7P4WBs1kkqZyh7YwhV11G7gkIF66S9FGazw=
+github.com/wuc656/compress v0.0.5/go.mod h1:LiqL76mUXnZOy4G5tio1zoFx/FSchENi3ZT00m48jOs=
