@@ -96,10 +96,10 @@ func canUpdate() (err error) {
 
 // BackgroundRun starts the update check and apply cycle.
 func (u *Updater) BackgroundRun() error {
-	if err := os.MkdirAll(u.getExecRelativeDir(u.Dir), 0755); err != nil {
+	/* if err := os.MkdirAll(u.getExecRelativeDir(u.Dir), 0755); err != nil {
 		// fail
 		return err
-	}
+	} */
 	// check to see if we want to check for updates based on version
 	// and last update time
 	if u.WantUpdate() {
@@ -108,7 +108,7 @@ func (u *Updater) BackgroundRun() error {
 			return err
 		}
 
-		u.SetUpdateTime()
+		//u.SetUpdateTime()
 
 		if err := u.Update(); err != nil {
 			return err
@@ -121,7 +121,8 @@ func (u *Updater) BackgroundRun() error {
 // is `dev` WantUpdate will return false. If u.ForceCheck is true or cktime is after now
 // WantUpdate will return true.
 func (u *Updater) WantUpdate() bool {
-	if u.CurrentVersion == "dev" || (!u.ForceCheck && u.NextUpdate().After(time.Now())) {
+	//if u.CurrentVersion == "dev" || (!u.ForceCheck && u.NextUpdate().After(time.Now())) {
+	if u.CurrentVersion == "dev" || (!u.ForceCheck) {
 		return false
 	}
 
