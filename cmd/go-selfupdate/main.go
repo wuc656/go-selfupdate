@@ -79,7 +79,7 @@ func createUpdate(path string, platform string) {
 	}
 	w.Write(f)
 	w.Close() // You must close this first to flush the bytes to the buffer.
-	err = os.WriteFile(filepath.Join(genDir, version, platform+".gz"), buf.Bytes(), 0755)
+	err = os.WriteFile(filepath.Join(genDir, version, platform+".zst"), buf.Bytes(), 0755)
 	//不使用diff
 	/* files, err := os.ReadDir(genDir)
 	if err != nil {

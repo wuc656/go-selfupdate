@@ -374,7 +374,7 @@ func (u *Updater) fetchFullBin() ([]byte, error) {
 }
 
 func (u *Updater) fetchBin() ([]byte, error) {
-	r, err := u.fetch(u.BinURL + url.QueryEscape(u.CmdName) + "/" + url.QueryEscape(u.Info.Version) + "/" + url.QueryEscape(plat) + ".gz")
+	r, err := u.fetch(u.BinURL + url.QueryEscape(u.CmdName) + "/" + url.QueryEscape(u.Info.Version) + "/" + url.QueryEscape(plat) + ".zst")
 	if err != nil {
 		return nil, err
 	}
