@@ -2,17 +2,15 @@ package main
 
 import (
 	"bytes"
-	"compress/gzip"
 	"crypto/sha256"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 
-	"github.com/wuc656/binarydist"
+	"github.com/klauspost/compress/zstd"
 )
 
 var version, genDir string
@@ -34,7 +32,8 @@ func generateSha256(path string) []byte {
 	//return base64.URLEncoding.EncodeToString(sum)
 }
 
-type gzReader struct {
+//不使用diff
+/* type gzReader struct {
 	z, r io.ReadCloser
 }
 
@@ -56,7 +55,7 @@ func newGzReader(r io.ReadCloser) io.ReadCloser {
 		panic(err)
 	}
 	return g
-}
+} */
 
 func createUpdate(path string, platform string) {
 	c := current{Version: version, Sha256: generateSha256(path)}
@@ -73,7 +72,7 @@ func createUpdate(path string, platform string) {
 	os.MkdirAll(filepath.Join(genDir, version), 0755)
 
 	var buf bytes.Buffer
-	w := gzip.NewWriter(&buf)
+	w, _ := zstd.NewWriter(&buf, zstd.EOption(zstd.WithEncoderLevel(4)))
 	f, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
@@ -81,8 +80,8 @@ func createUpdate(path string, platform string) {
 	w.Write(f)
 	w.Close() // You must close this first to flush the bytes to the buffer.
 	err = os.WriteFile(filepath.Join(genDir, version, platform+".gz"), buf.Bytes(), 0755)
-
-	files, err := os.ReadDir(genDir)
+	//不使用diff
+	/* files, err := os.ReadDir(genDir)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -120,7 +119,7 @@ func createUpdate(path string, platform string) {
 			panic(err)
 		}
 		os.WriteFile(filepath.Join(genDir, file.Name(), version, platform), patch.Bytes(), 0755)
-	}
+	} */
 }
 
 func printUsage() {

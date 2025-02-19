@@ -2,7 +2,6 @@ package selfupdate
 
 import (
 	"bytes"
-	"compress/gzip"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -16,7 +15,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/wuc656/binarydist"
+	"github.com/klauspost/compress/zstd"
 )
 
 const (
@@ -204,7 +203,7 @@ func (u *Updater) Update() error {
 	}
 	defer old.Close()
 
-	bin, err := u.fetchAndVerifyPatch(old)
+	/* bin, err := u.fetchAndVerifyPatch(old)
 	if err != nil {
 		if err == ErrHashMismatch {
 			log.Println("update: hash mismatch from patched binary")
@@ -224,6 +223,11 @@ func (u *Updater) Update() error {
 			}
 			return err
 		}
+	} */
+	bin, err := u.fetchFullBin()
+	if err != nil {
+		log.Println("update: fetching full binary(fetchFullBin),", err)
+		return err
 	}
 
 	// close the old binary before installing because on windows
@@ -326,7 +330,8 @@ func (u *Updater) fetchInfo() error {
 	return nil
 }
 
-func (u *Updater) fetchAndVerifyPatch(old io.Reader) ([]byte, error) {
+//不使用diff
+/* func (u *Updater) fetchAndVerifyPatch(old io.Reader) ([]byte, error) {
 	bin, err := u.fetchAndApplyPatch(old)
 	if err != nil {
 		return nil, err
@@ -346,7 +351,7 @@ func (u *Updater) fetchAndApplyPatch(old io.Reader) ([]byte, error) {
 	var buf bytes.Buffer
 	err = binarydist.Patch(old, &buf, r)
 	return buf.Bytes(), err
-}
+} */
 
 func (u *Updater) fetchAndVerifyFullBin() ([]byte, error) {
 	bin, err := u.fetchBin()
@@ -360,6 +365,14 @@ func (u *Updater) fetchAndVerifyFullBin() ([]byte, error) {
 	return bin, nil
 }
 
+func (u *Updater) fetchFullBin() ([]byte, error) {
+	bin, err := u.fetchBin()
+	if err != nil {
+		return nil, err
+	}
+	return bin, nil
+}
+
 func (u *Updater) fetchBin() ([]byte, error) {
 	r, err := u.fetch(u.BinURL + url.QueryEscape(u.CmdName) + "/" + url.QueryEscape(u.Info.Version) + "/" + url.QueryEscape(plat) + ".gz")
 	if err != nil {
@@ -367,7 +380,7 @@ func (u *Updater) fetchBin() ([]byte, error) {
 	}
 	defer r.Close()
 	buf := new(bytes.Buffer)
-	gz, err := gzip.NewReader(r)
+	gz, err := zstd.NewReader(r)
 	if err != nil {
 		return nil, err
 	}
