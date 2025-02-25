@@ -39,11 +39,11 @@ var (
 //		go updater.BackgroundRun()
 //	}
 type Updater struct {
-	CurrentVersion string    // Currently running version. `dev` is a special version here and will cause the updater to never update.
-	ApiURL         string    // Base URL for API requests (JSON files).
-	CmdName        string    // Command name is appended to the ApiURL like http://apiurl/CmdName/. This represents one binary.
-	CheckTime      int       // Time in hours before next check
-	RandomizeTime  int       // Time in hours to randomize with CheckTime
+	CurrentVersion string // Currently running version. `dev` is a special version here and will cause the updater to never update.
+	ApiURL         string // Base URL for API requests (JSON files).
+	CmdName        string // Command name is appended to the ApiURL like http://apiurl/CmdName/. This represents one binary.
+	CheckTime      int    // Time in hours before next check
+	RandomizeTime  int    // Time in hours to randomize with CheckTime
 	Info           struct {
 		Version string
 	}
@@ -188,6 +188,12 @@ func (u *Updater) UpdateForce() error {
 
 	if resolvedPath, err := filepath.EvalSymlinks(path); err == nil {
 		path = resolvedPath
+	}
+
+	// go fetch latest updates manifest
+	err = u.FetchInfo()
+	if err != nil {
+		return err
 	}
 
 	old, err := os.Open(path)
