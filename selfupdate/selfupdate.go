@@ -33,7 +33,6 @@ var (
 //	updater := &selfupdate.Updater{
 //		CurrentVersion: version,
 //		ApiURL:         "http://updates.yourdomain.com/",
-//		Dir:            "update/",
 //		CmdName:        "myapp", // app name
 //	}
 //	if updater != nil {
@@ -43,7 +42,6 @@ type Updater struct {
 	CurrentVersion string    // Currently running version. `dev` is a special version here and will cause the updater to never update.
 	ApiURL         string    // Base URL for API requests (JSON files).
 	CmdName        string    // Command name is appended to the ApiURL like http://apiurl/CmdName/. This represents one binary.
-	Dir            string    // Directory to store selfupdate state.
 	CheckTime      int       // Time in hours before next check
 	RandomizeTime  int       // Time in hours to randomize with CheckTime
 	Requester      Requester // Optional parameter to override existing HTTP request handler

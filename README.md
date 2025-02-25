@@ -22,7 +22,6 @@ Enable your Golang applications to self update.  Inspired by Chrome based on Her
 		CurrentVersion: version, // the current version of your app used to determine if an update is necessary
 		// these endpoints can be the same if everything is hosted in the same place
 		ApiURL:         "http://updates.yourdomain.com/", // endpoint to get update manifest
-		Dir:            "update/",                        // directory relative to your app to store temporary state files related to go-selfupdate
 		CmdName:        "myapp",                          // your app's name (must correspond to app name hosting the updates)
 		// app name allows you to serve updates for multiple apps on the same server/endpoint
 	}
@@ -87,7 +86,6 @@ Updater Config options:
 		CurrentVersion string    // Currently running version. `dev` is a special version here and will cause the updater to never update.
 		ApiURL         string    // Base URL for API requests (JSON files).
 		CmdName        string    // Command name is appended to the ApiURL like http://apiurl/CmdName/. This represents one binary.
-		Dir            string    // Directory to store selfupdate state.
 		CheckTime      int       // Time in hours before next check
 		RandomizeTime  int       // Time in hours to randomize with CheckTime
 		Requester      Requester // Optional parameter to override existing HTTP request handler
@@ -106,7 +104,3 @@ It is common for an app to want to restart to apply the update. `go-selfupdate` 
 Or maybe you have a fancy graceful restart library/func:
 
 	go u.OnSuccessfulUpdate = func() { gracefullyRestartMyApp() }
-
-## State
-
-go-selfupdate will keep a Go time.Time formatted timestamp in a file named `cktime` in folder specified by `Updater.Dir`. This can be useful for debugging to see when the next update can be applied or allow other applications to manipulate it.
