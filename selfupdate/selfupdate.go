@@ -2,26 +2,22 @@ package selfupdate
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
 	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
-	"time"
 
 	"github.com/klauspost/compress/zstd"
 )
 
 const (
 	// holds a timestamp which triggers the next update
-	upcktimePath = "cktime"                            // path to timestamp file relative to u.Dir
-	plat         = runtime.GOOS + "-" + runtime.GOARCH // ex: linux-amd64
+	plat = runtime.GOOS + "-" + runtime.GOARCH // ex: linux-amd64
 )
 
 var (
@@ -60,7 +56,6 @@ type Updater struct {
 	Requester      Requester // Optional parameter to override existing HTTP request handler
 	Info           struct {
 		Version string
-		Sha256  []byte
 	}
 	OnSuccessfulUpdate func() // Optional function to run after an update has successfully taken place
 }
@@ -95,20 +90,11 @@ func canUpdate() (err error) {
 
 // BackgroundRun starts the update check and apply cycle.
 func (u *Updater) BackgroundRun() error {
-	/* if err := os.MkdirAll(u.getExecRelativeDir(u.Dir), 0755); err != nil {
-		// fail
-		return err
-	} */
-	// check to see if we want to check for updates based on version
-	// and last update time
 	if u.WantUpdate() {
 		if err := canUpdate(); err != nil {
 			// fail
 			return err
 		}
-
-		//u.SetUpdateTime()
-
 		if err := u.Update(); err != nil {
 			return err
 		}
@@ -117,39 +103,13 @@ func (u *Updater) BackgroundRun() error {
 }
 
 // WantUpdate returns boolean designating if an update is desired. If the app's version
-// is `dev` WantUpdate will return false. If u.ForceCheck is true or cktime is after now
-// WantUpdate will return true.
+// is `dev` WantUpdate will return false.
 func (u *Updater) WantUpdate() bool {
-	//if u.CurrentVersion == "dev" || (!u.ForceCheck && u.NextUpdate().After(time.Now())) {
 	if u.CurrentVersion == "dev" || (!u.ForceCheck) {
 		return false
 	}
 
 	return true
-}
-
-// NextUpdate returns the next time update should be checked
-func (u *Updater) NextUpdate() time.Time {
-	path := u.getExecRelativeDir(u.Dir + upcktimePath)
-	nextTime := readTime(path)
-
-	return nextTime
-}
-
-// SetUpdateTime writes the next update time to the state file
-func (u *Updater) SetUpdateTime() bool {
-	path := u.getExecRelativeDir(u.Dir + upcktimePath)
-	wait := time.Duration(u.CheckTime) * time.Hour
-	// Add 1 to random time since max is not included
-	waitrand := time.Duration(rand.Intn(u.RandomizeTime+1)) * time.Hour
-
-	return writeTime(path, time.Now().Add(wait+waitrand))
-}
-
-// ClearUpdateState writes current time to state file
-func (u *Updater) ClearUpdateState() {
-	path := u.getExecRelativeDir(u.Dir + upcktimePath)
-	os.Remove(path)
 }
 
 // UpdateAvailable checks if update is available and returns version
@@ -164,7 +124,7 @@ func (u *Updater) UpdateAvailable() (string, error) {
 	}
 	defer old.Close()
 
-	err = u.fetchInfo()
+	err = u.FetchInfo()
 	if err != nil {
 		return "", err
 	}
@@ -187,7 +147,7 @@ func (u *Updater) Update() error {
 	}
 
 	// go fetch latest updates manifest
-	err = u.fetchInfo()
+	err = u.FetchInfo()
 	if err != nil {
 		return err
 	}
@@ -203,27 +163,6 @@ func (u *Updater) Update() error {
 	}
 	defer old.Close()
 
-	/* bin, err := u.fetchAndVerifyPatch(old)
-	if err != nil {
-		if err == ErrHashMismatch {
-			log.Println("update: hash mismatch from patched binary")
-		} else {
-			if u.DiffURL != "" {
-				log.Println("update: patching binary,", err)
-			}
-		}
-
-		// if patch failed grab the full new bin
-		bin, err = u.fetchAndVerifyFullBin()
-		if err != nil {
-			if err == ErrHashMismatch {
-				log.Println("update: hash mismatch from full binary")
-			} else {
-				log.Println("update: fetching full binary,", err)
-			}
-			return err
-		}
-	} */
 	bin, err := u.fetchFullBin()
 	if err != nil {
 		log.Println("update: fetching full binary(fetchFullBin),", err)
@@ -312,9 +251,9 @@ func fromStream(updateWith io.Reader) (err error, errRecover error) {
 	return
 }
 
-// fetchInfo fetches the update JSON manifest at u.ApiURL/appname/platform.json
+// FetchInfo fetches the update JSON manifest at u.ApiURL/appname/platform.json
 // and updates u.Info.
-func (u *Updater) fetchInfo() error {
+func (u *Updater) FetchInfo() error {
 	r, err := u.fetch(u.ApiURL + url.QueryEscape(u.CmdName) + "/" + url.QueryEscape(plat) + ".json")
 	if err != nil {
 		return err
@@ -324,45 +263,7 @@ func (u *Updater) fetchInfo() error {
 	if err != nil {
 		return err
 	}
-	if len(u.Info.Sha256) != sha256.Size {
-		return errors.New("bad cmd hash in info")
-	}
 	return nil
-}
-
-//不使用diff
-/* func (u *Updater) fetchAndVerifyPatch(old io.Reader) ([]byte, error) {
-	bin, err := u.fetchAndApplyPatch(old)
-	if err != nil {
-		return nil, err
-	}
-	if !verifySha(bin, u.Info.Sha256) {
-		return nil, ErrHashMismatch
-	}
-	return bin, nil
-}
-
-func (u *Updater) fetchAndApplyPatch(old io.Reader) ([]byte, error) {
-	r, err := u.fetch(u.DiffURL + url.QueryEscape(u.CmdName) + "/" + url.QueryEscape(u.CurrentVersion) + "/" + url.QueryEscape(u.Info.Version) + "/" + url.QueryEscape(plat))
-	if err != nil {
-		return nil, err
-	}
-	defer r.Close()
-	var buf bytes.Buffer
-	err = binarydist.Patch(old, &buf, r)
-	return buf.Bytes(), err
-} */
-
-func (u *Updater) fetchAndVerifyFullBin() ([]byte, error) {
-	bin, err := u.fetchBin()
-	if err != nil {
-		return nil, err
-	}
-	verified := verifySha(bin, u.Info.Sha256)
-	if !verified {
-		return nil, ErrHashMismatch
-	}
-	return bin, nil
 }
 
 func (u *Updater) fetchFullBin() ([]byte, error) {
@@ -406,29 +307,4 @@ func (u *Updater) fetch(url string) (io.ReadCloser, error) {
 	}
 
 	return readCloser, nil
-}
-
-func readTime(path string) time.Time {
-	p, err := os.ReadFile(path)
-	if os.IsNotExist(err) {
-		return time.Time{}
-	}
-	if err != nil {
-		return time.Now().Add(1000 * time.Hour)
-	}
-	t, err := time.Parse(time.RFC3339, string(p))
-	if err != nil {
-		return time.Now().Add(1000 * time.Hour)
-	}
-	return t
-}
-
-func verifySha(bin []byte, sha []byte) bool {
-	h := sha256.New()
-	h.Write(bin)
-	return bytes.Equal(h.Sum(nil), sha)
-}
-
-func writeTime(path string, t time.Time) bool {
-	return os.WriteFile(path, []byte(t.Format(time.RFC3339)), 0644) == nil
 }

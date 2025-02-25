@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -17,48 +16,10 @@ var version, genDir string
 
 type current struct {
 	Version string
-	Sha256  []byte
 }
-
-func generateSha256(path string) []byte {
-	h := sha256.New()
-	b, err := os.ReadFile(path)
-	if err != nil {
-		fmt.Println(err)
-	}
-	h.Write(b)
-	sum := h.Sum(nil)
-	return sum
-	//return base64.URLEncoding.EncodeToString(sum)
-}
-
-//不使用diff
-/* type gzReader struct {
-	z, r io.ReadCloser
-}
-
-func (g *gzReader) Read(p []byte) (int, error) {
-	return g.z.Read(p)
-}
-
-func (g *gzReader) Close() error {
-	g.z.Close()
-	return g.r.Close()
-}
-
-func newGzReader(r io.ReadCloser) io.ReadCloser {
-	var err error
-	g := new(gzReader)
-	g.r = r
-	g.z, err = gzip.NewReader(r)
-	if err != nil {
-		panic(err)
-	}
-	return g
-} */
 
 func createUpdate(path string, platform string) {
-	c := current{Version: version, Sha256: generateSha256(path)}
+	c := current{Version: version}
 
 	b, err := json.MarshalIndent(c, "", "    ")
 	if err != nil {
@@ -80,46 +41,6 @@ func createUpdate(path string, platform string) {
 	w.Write(f)
 	w.Close() // You must close this first to flush the bytes to the buffer.
 	err = os.WriteFile(filepath.Join(genDir, version, platform+".zst"), buf.Bytes(), 0755)
-	//不使用diff
-	/* files, err := os.ReadDir(genDir)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	for _, file := range files {
-		if file.IsDir() == false {
-			continue
-		}
-		if file.Name() == version {
-			continue
-		}
-
-		os.Mkdir(filepath.Join(genDir, file.Name(), version), 0755)
-
-		fName := filepath.Join(genDir, file.Name(), platform+".gz")
-		old, err := os.Open(fName)
-		if err != nil {
-			// Don't have an old release for this os/arch, continue on
-			continue
-		}
-
-		fName = filepath.Join(genDir, version, platform+".gz")
-		newF, err := os.Open(fName)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Can't open %s: error: %s\n", fName, err)
-			os.Exit(1)
-		}
-
-		ar := newGzReader(old)
-		defer ar.Close()
-		br := newGzReader(newF)
-		defer br.Close()
-		patch := new(bytes.Buffer)
-		if err := binarydist.Diff(ar, br, patch); err != nil {
-			panic(err)
-		}
-		os.WriteFile(filepath.Join(genDir, file.Name(), version, platform), patch.Bytes(), 0755)
-	} */
 }
 
 func printUsage() {

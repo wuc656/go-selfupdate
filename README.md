@@ -1,8 +1,5 @@
 # go-selfupdate
 
-[![GoDoc](https://godoc.org/github.com/sanbornm/go-selfupdate/selfupdate?status.svg)](https://godoc.org/github.com/sanbornm/go-selfupdate/selfupdate)
-![CI/CD](https://github.com/sanbornm/go-selfupdate/actions/workflows/ci.yml/badge.svg)
-
 Enable your Golang applications to self update.  Inspired by Chrome based on Heroku's [hk](https://github.com/heroku/hk).
 
 ## Features
@@ -66,7 +63,6 @@ Updates are fetched from an HTTP(s) server. AWS S3 or static hosting can be used
 	200 ok
 	{
 		"Version": "2",
-		"Sha256": "..." // base64
 	}
 
 	then
@@ -102,7 +98,6 @@ Updater Config options:
 		Requester      Requester // Optional parameter to override existing HTTP request handler
 		Info           struct {
 			Version string
-			Sha256  []byte
 		}
 		OnSuccessfulUpdate func() // Optional function to run after an update has successfully taken place
 	}
@@ -111,11 +106,11 @@ Updater Config options:
 
 It is common for an app to want to restart to apply the update. `go-selfupdate` gives you a hook to do that but leaves it up to you on how and when to restart as it differs for all apps. If you have a service restart application like Docker or systemd you can simply exit and let the upstream app start/restart your application. Just set the `OnSuccessfulUpdate` hook:
 
-	u.OnSuccessfulUpdate = func() { os.Exit(0) }
+	go u.OnSuccessfulUpdate = func() { os.Exit(0) }
 
 Or maybe you have a fancy graceful restart library/func:
 
-	u.OnSuccessfulUpdate = func() { gracefullyRestartMyApp() }
+	go u.OnSuccessfulUpdate = func() { gracefullyRestartMyApp() }
 
 ## State
 
