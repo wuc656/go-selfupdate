@@ -180,6 +180,49 @@ func (u *Updater) Update() error {
 	return nil
 }
 
+// 強制更新
+func (u *Updater) UpdateForce() error {
+	path, err := os.Executable()
+	if err != nil {
+		return err
+	}
+
+	if resolvedPath, err := filepath.EvalSymlinks(path); err == nil {
+		path = resolvedPath
+	}
+
+	old, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer old.Close()
+
+	bin, err := u.fetchFullBin()
+	if err != nil {
+		log.Println("update: fetching full binary(fetchFullBin),", err)
+		return err
+	}
+
+	// close the old binary before installing because on windows
+	// it can't be renamed if a handle to the file is still open
+	old.Close()
+
+	err, errRecover := fromStream(bytes.NewBuffer(bin))
+	if errRecover != nil {
+		return fmt.Errorf("update and recovery errors: %q %q", err, errRecover)
+	}
+	if err != nil {
+		return err
+	}
+
+	// update was successful, run func if set
+	if u.OnSuccessfulUpdate != nil {
+		u.OnSuccessfulUpdate()
+	}
+
+	return nil
+}
+
 func fromStream(updateWith io.Reader) (err error, errRecover error) {
 	updatePath, err := os.Executable()
 	if err != nil {
