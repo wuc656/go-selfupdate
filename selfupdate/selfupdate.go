@@ -28,7 +28,6 @@ var (
 
 // Updater is the configuration and runtime data for doing an update.
 //
-//
 // Example:
 //
 //	updater := &selfupdate.Updater{
@@ -45,7 +44,6 @@ type Updater struct {
 	ApiURL         string    // Base URL for API requests (JSON files).
 	CmdName        string    // Command name is appended to the ApiURL like http://apiurl/CmdName/. This represents one binary.
 	Dir            string    // Directory to store selfupdate state.
-	ForceCheck     bool      // Check for update regardless of cktime timestamp
 	CheckTime      int       // Time in hours before next check
 	RandomizeTime  int       // Time in hours to randomize with CheckTime
 	Requester      Requester // Optional parameter to override existing HTTP request handler
@@ -100,7 +98,7 @@ func (u *Updater) BackgroundRun() error {
 // WantUpdate returns boolean designating if an update is desired. If the app's version
 // is `dev` WantUpdate will return false.
 func (u *Updater) WantUpdate() bool {
-	if u.CurrentVersion == "dev" || (!u.ForceCheck) {
+	if u.CurrentVersion == "dev" {
 		return false
 	}
 
