@@ -88,7 +88,6 @@ Updater Config options:
 		CmdName        string    // Command name is appended to the ApiURL like http://apiurl/CmdName/. This represents one binary.
 		CheckTime      int       // Time in hours before next check
 		RandomizeTime  int       // Time in hours to randomize with CheckTime
-		Requester      Requester // Optional parameter to override existing HTTP request handler
 		Info           struct {
 			Version string
 		}

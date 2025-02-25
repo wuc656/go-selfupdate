@@ -44,7 +44,6 @@ type Updater struct {
 	CmdName        string    // Command name is appended to the ApiURL like http://apiurl/CmdName/. This represents one binary.
 	CheckTime      int       // Time in hours before next check
 	RandomizeTime  int       // Time in hours to randomize with CheckTime
-	Requester      Requester // Optional parameter to override existing HTTP request handler
 	Info           struct {
 		Version string
 	}
@@ -327,18 +326,5 @@ func (u *Updater) fetchBin() ([]byte, error) {
 }
 
 func (u *Updater) fetch(url string) (io.ReadCloser, error) {
-	if u.Requester == nil {
-		return defaultHTTPRequester.Fetch(url)
-	}
-
-	readCloser, err := u.Requester.Fetch(url)
-	if err != nil {
-		return nil, err
-	}
-
-	if readCloser == nil {
-		return nil, fmt.Errorf("Fetch was expected to return non-nil ReadCloser")
-	}
-
-	return readCloser, nil
+	return defaultHTTPRequester.Fetch(url)
 }
