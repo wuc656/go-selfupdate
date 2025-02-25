@@ -22,8 +22,6 @@ Enable your Golang applications to self update.  Inspired by Chrome based on Her
 		CurrentVersion: version, // the current version of your app used to determine if an update is necessary
 		// these endpoints can be the same if everything is hosted in the same place
 		ApiURL:         "http://updates.yourdomain.com/", // endpoint to get update manifest
-		BinURL:         "http://updates.yourdomain.com/", // endpoint to get full binaries
-		DiffURL:        "http://updates.yourdomain.com/", // endpoint to get binary diff/patches
 		Dir:            "update/",                        // directory relative to your app to store temporary state files related to go-selfupdate
 		CmdName:        "myapp",                          // your app's name (must correspond to app name hosting the updates)
 		// app name allows you to serve updates for multiple apps on the same server/endpoint
@@ -89,8 +87,6 @@ Updater Config options:
 		CurrentVersion string    // Currently running version. `dev` is a special version here and will cause the updater to never update.
 		ApiURL         string    // Base URL for API requests (JSON files).
 		CmdName        string    // Command name is appended to the ApiURL like http://apiurl/CmdName/. This represents one binary.
-		BinURL         string    // Base URL for full binary downloads.
-		DiffURL        string    // Base URL for diff downloads.
 		Dir            string    // Directory to store selfupdate state.
 		ForceCheck     bool      // Check for update regardless of cktime timestamp
 		CheckTime      int       // Time in hours before next check
