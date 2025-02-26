@@ -178,6 +178,54 @@ func (u *Updater) Update() error {
 
 	return nil
 }
+// Update initiates the self update process
+func (u *Updater) UpdateNoOnSuccessfulUpdate() error {
+	path, err := os.Executable()
+	if err != nil {
+		return err
+	}
+
+	if resolvedPath, err := filepath.EvalSymlinks(path); err == nil {
+		path = resolvedPath
+	}
+
+	// go fetch latest updates manifest
+	err = u.FetchInfo()
+	if err != nil {
+		return err
+	}
+
+	// we are on the latest version, nothing to do
+	if u.Info.Version == u.CurrentVersion {
+		return nil
+	}
+
+	old, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer old.Close()
+
+	bin, err := u.fetchFullBin()
+	if err != nil {
+		log.Println("update: fetching full binary(fetchFullBin),", err)
+		return err
+	}
+
+	// close the old binary before installing because on windows
+	// it can't be renamed if a handle to the file is still open
+	old.Close()
+
+	err, errRecover := fromStream(bytes.NewBuffer(bin))
+	if errRecover != nil {
+		return fmt.Errorf("update and recovery errors: %q %q", err, errRecover)
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 // 強制更新
 func (u *Updater) UpdateForce() error {
@@ -221,9 +269,10 @@ func (u *Updater) UpdateForce() error {
 	}
 
 	// update was successful, run func if set
-	if u.OnSuccessfulUpdate != nil {
+	// 改為手動執行 OnSuccessfulUpdate
+	/* if u.OnSuccessfulUpdate != nil {
 		u.OnSuccessfulUpdate()
-	}
+	} */
 
 	return nil
 }
