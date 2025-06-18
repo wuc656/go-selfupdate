@@ -50,11 +50,11 @@ type Updater struct {
 	OnSuccessfulUpdate func() // Optional function to run after an update has successfully taken place
 }
 
-func (u *Updater) getExecRelativeDir(dir string) string {
+/* func (u *Updater) getExecRelativeDir(dir string) string {
 	filename, _ := os.Executable()
 	path := filepath.Join(filepath.Dir(filename), dir)
 	return path
-}
+} */
 
 func canUpdate() (err error) {
 	// get the directory the file exists in
@@ -95,11 +95,7 @@ func (u *Updater) BackgroundRun() error {
 // WantUpdate returns boolean designating if an update is desired. If the app's version
 // is `dev` WantUpdate will return false.
 func (u *Updater) WantUpdate() bool {
-	if u.CurrentVersion == "dev" {
-		return false
-	}
-
-	return true
+	return u.CurrentVersion != "dev"
 }
 
 // UpdateAvailable checks if update is available and returns version
