@@ -1,5 +1,5 @@
 module github.com/wuc656/go-selfupdate
 
-go 1.24.5
+go 1.24.6
 
 require github.com/klauspost/compress v1.18.0
